@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine,text
+from sqlalchemy import create_engine,text,desc
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 
@@ -80,4 +80,22 @@ if __name__ == "__main__":
                 }
         data.append(value)
         
-    
+    """Пользователь с максимальным количеством достижений (штук)"""
+    value = session.execute(text("select user_id,count(achivment_id) as max_achivment from achivment_recived group by user_id order by max_achivment desc limit 1"))
+    value = value.fetchone()
+
+
+    """Пользователь с максимальным количеством достижений (штук)"""
+    value = session.execute(text("select user_id, max(achivments.number_of_points) as max_points from achivment_recived inner join achivments on achivment_recived.achivment_id = achivments.achivment_id group by user_id order by max_points desc limit 1"))
+    value = value.fetchone()
+    #print(value)
+
+
+    """s"""
+    value = session.execute(text("""select user_id, (select sum(achivments.number_of_points) as max_points from achivment_recived 
+                                                inner join achivments on achivment_recived.achivment_id = achivments.achivment_id
+                                                group by user_id order by max_points desc limit 1) - sum(achivments.number_of_points) as value_difference 
+                                                from achivment_recived inner join achivments on achivment_recived.achivment_id = achivments.achivment_id
+                                                group by user_id order by value_difference desc limit 10"""))
+    value = value.fetchall()
+    print(value)
