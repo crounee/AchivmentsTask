@@ -11,11 +11,10 @@ achievementsNamespace = Namespace("AchievementsInformation","Предостав�
 @achievementsNamespace.route('/allAchievements')
 class AllAchievements(Resource):
 
-    achievementsModel = achievementsNamespace.model("Предоставляет информацию о достижениях/Добавление достижений",{
-    'username': fields.String(
-        readonly=True,
-        description='<h1>Информация о пользователе</h1>'
-    )
+    achievementsModel = achievementsNamespace.model("Предоставляет информацию о достижениях",{
+    "achivment_id":fields.Integer,
+    "achivment_name":fields.String,
+    "number_of_points":fields.Integer
 })
 
 
@@ -24,19 +23,28 @@ class AllAchievements(Resource):
     def get(self):
         '''Возвращает информацию о всех доступных достижениях'''
         
+        
         try:
-            print(request.args)
-            for i in request.args:
-                print(request.args.get(i))
-        except:
-            pass
+            achivments = engine.session.query(models.Achivments).all()
+            description = []
 
-        return {"name":{request.args.get('username')}}
+            for achiv in achivments:
+                value = {"achivment_id":achiv.achivment_id,
+                    "achivment_name":achiv.achivment_name,
+                    "number_of_points":achiv.number_of_points}
+                description.append(value)
+
+            return description
+        except exc.IntegrityError:
+            engine.session.rollback()
+            return {"status":False}
+        
     
+
+
     addAchievementsModel = achievementsNamespace.model("Создает достижение",{
     'status':fields.Boolean
 })
-
     addUserAchievementsArguments = reqparse.RequestParser()
     addUserAchievementsArguments.add_argument("achivment_name",type=str,help="Название достижения")
     addUserAchievementsArguments.add_argument("number_of_points",type=int,help="Количество очков за получение достижения")

@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine,text
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
+
 url = URL.create(
     drivername="postgresql",
     username="postgres",
@@ -32,8 +33,8 @@ if __name__ == "__main__":
     number_of_points = 100
 
     addAchivment = Achivments(achivment_name = achivment_name,number_of_points = number_of_points)
-    session.add(addAchivment)
-    session.commit()
+    #session.add(addAchivment)
+    #session.commit()
     
     """Описание достижения"""
     language_name = "rus"
@@ -41,7 +42,42 @@ if __name__ == "__main__":
     description = "Достижение за покупку воды бим бам бим бим"
 
     addDescription = Description(language_name = language_name,achivment_id = achivment_id,description = description)
-    session.add(addDescription)
-    session.commit()
+    #session.add(addDescription)
+    #session.commit()
 
 
+    '''Возвращает информацию о всех доступных достижениях'''
+    achivments = session.query(Achivments).all()
+    description = []
+    for achiv in achivments:
+        value = {"achivment_id":achiv.achivment_id,
+                 "achivment_name":achiv.achivment_name,
+                 "number_of_points":achiv.number_of_points}
+        description.append(value)
+
+
+    '''Предоставляет информацию о выданных пользователю достижениях на выбранном пользователем языке'''
+
+    user_id = 1
+    language_name = session.query(User).filter(User.user_id == user_id)
+    language_name = language_name[0].language_name
+
+    achivments_recived = session.query(Achivment_recived).filter(Achivment_recived.user_id == user_id)
+    data = []
+    for achivment in achivments_recived:
+        description = session.query(Description).filter(Description.achivment_id == achivment.achivment_id,Description.language_name == language_name)
+        
+        if description.count() > 0:
+            description = description[0].description
+        else:
+            description = "not found description"
+
+        value = {"achivment_recived_id":achivment.achivment_recived_id,
+                "user_id":achivment.user_id,
+                "achivment_id": achivment.achivment_id,
+                "date_of_recived":achivment.date_of_recived,
+                "description":description
+                }
+        data.append(value)
+        
+    
