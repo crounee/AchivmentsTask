@@ -24,6 +24,24 @@ if __name__ == "__main__":
     id_user = 1
     number_achivment = 228
     giveAchivmentRequest = Achivment_recived(user_id = id_user,achivment_id=number_achivment)
-    session.add(giveAchivmentRequest)
+    #session.add(giveAchivmentRequest)
+    #session.commit()
+
+    """Добавление достижения"""
+    achivment_name = "Покупка воды"
+    number_of_points = 100
+
+    addAchivment = Achivments(achivment_name = achivment_name,number_of_points = number_of_points)
+    session.add(addAchivment)
     session.commit()
-    '''Предоставляет информацию о выданных пользователю достижениях на выбранном пользователем языке'''
+    
+    """Описание достижения"""
+    language_name = "rus"
+    achivment_id = addAchivment.achivment_id
+    description = "Достижение за покупку воды бим бам бим бим"
+
+    addDescription = Description(language_name = language_name,achivment_id = achivment_id,description = description)
+    session.add(addDescription)
+    session.commit()
+
+

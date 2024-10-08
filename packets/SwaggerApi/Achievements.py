@@ -5,7 +5,13 @@ from ..Database import models,engine
 
 achievementsNamespace = Namespace("AchievementsInformation","Предоставляет информацию о достижениях/Добавление достижений")
 
-achievementsModel = achievementsNamespace.model("Предоставляет информацию о достижениях/Добавление достижений",{
+
+
+
+@achievementsNamespace.route('/allAchievements')
+class AllAchievements(Resource):
+
+    achievementsModel = achievementsNamespace.model("Предоставляет информацию о достижениях/Добавление достижений",{
     'username': fields.String(
         readonly=True,
         description='<h1>Информация о пользователе</h1>'
@@ -13,9 +19,6 @@ achievementsModel = achievementsNamespace.model("Предоставляет ин
 })
 
 
-
-@achievementsNamespace.route('/allAchievements')
-class AllAchievements(Resource):
     @achievementsNamespace.marshal_list_with(achievementsModel)
     @achievementsNamespace.response(500, 'Internal Server error')
     def get(self):
@@ -30,29 +33,48 @@ class AllAchievements(Resource):
 
         return {"name":{request.args.get('username')}}
     
-    def put(self):
-        '''Добавить достижение'''
-        try:
-            print(request.args)
-            for i in request.args:
-                print(request.args.get(i))
-        except:
-            pass
-
-        return {"name":{request.args.get('username')}}
-
-
-addUserAchievementsModel = achievementsNamespace.model("Выдает достижения пользователю с сохранением времени выдачи",{
+    addAchievementsModel = achievementsNamespace.model("Создает достижение",{
     'status':fields.Boolean
 })
 
+    addUserAchievementsArguments = reqparse.RequestParser()
+    addUserAchievementsArguments.add_argument("achivment_name",type=str,help="Название достижения")
+    addUserAchievementsArguments.add_argument("number_of_points",type=int,help="Количество очков за получение достижения")
 
-addUserAchievementsArguments = reqparse.RequestParser()
-addUserAchievementsArguments.add_argument("user_id",type=int,help="id пользователя")
-addUserAchievementsArguments.add_argument("achivment_id",type=int,help="id достижения")
+    @achievementsNamespace.marshal_list_with(addAchievementsModel)
+    @achievementsNamespace.response(500, 'Internal Server error')
+    @achievementsNamespace.expect(addUserAchievementsArguments)
+    def put(self):
+        '''Добавить достижение'''
+        achivment_name = request.args.get('achivment_name')
+        number_of_points = request.args.get('number_of_points')
+
+        if achivment_name != None or number_of_points != None:
+            try:
+                addAchivment = models.Achivments(achivment_name = achivment_name,number_of_points = number_of_points)
+                engine.session.add(addAchivment)
+                engine.session.commit()
+                return {'status':True}
+            except exc.IntegrityError:
+                engine.session.rollback()
+                return {"status":False}
+        else:
+            return {'status':False}
+
+
+
 
 @achievementsNamespace.route('/addUserAchievements')
 class AddUserAchievements(Resource):
+
+    addUserAchievementsModel = achievementsNamespace.model("Выдает достижения пользователю с сохранением времени выдачи",{
+    'status':fields.Boolean
+})
+
+    addUserAchievementsArguments = reqparse.RequestParser()
+    addUserAchievementsArguments.add_argument("user_id",type=int,help="id пользователя")
+    addUserAchievementsArguments.add_argument("achivment_id",type=int,help="id достижения")
+
     @achievementsNamespace.marshal_list_with(addUserAchievementsModel)
     @achievementsNamespace.response(500, 'Internal Server error')
     @achievementsNamespace.expect(addUserAchievementsArguments)
@@ -75,4 +97,38 @@ class AddUserAchievements(Resource):
             return {'status':False}
     
     
+    
+@achievementsNamespace.route('/addAchivmentsDescription')
+class AddDescriptionAchievements(Resource):
+
+    addDescriptionAchievementsModel = achievementsNamespace.model("Добавляет описание достижения",{
+    'status':fields.Boolean
+})
+
+    addDescriptionAchievementsArguments = reqparse.RequestParser()
+    addDescriptionAchievementsArguments.add_argument("achivment_id",type=int,help="id достижения")
+    addDescriptionAchievementsArguments.add_argument("language_name",type=str,help="Язык описания достижения")
+    addDescriptionAchievementsArguments.add_argument("description",type=str,help="Описание достижения")
+
+    @achievementsNamespace.marshal_list_with(addDescriptionAchievementsModel)
+    @achievementsNamespace.response(500, 'Internal Server error')
+    @achievementsNamespace.expect(addDescriptionAchievementsArguments)
+    def put(self):
+        '''Добавляет описание достижения'''
+
+        achivment_id = request.args.get('achivment_id')
+        description = request.args.get('description')
+        language_name = request.args.get('language_name')
+
+        if achivment_id != None and description != None and language_name != None:
+            try:
+                addDescription = models.Description(language_name = language_name,achivment_id = achivment_id,description = description)
+                engine.session.add(addDescription)
+                engine.session.commit()
+                return {'status':True}
+            except exc.IntegrityError:
+                engine.session.rollback()
+                return {"status":False}
+        else:
+            return {'status':False}
     
