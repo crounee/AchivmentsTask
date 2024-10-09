@@ -14,7 +14,7 @@ class User(Base):
 class Achivments(Base):
     __tablename__ = "achivments"
     achivment_id = Column(Integer,autoincrement=True,primary_key=True)
-    achivment_name = Column(VARCHAR(40),nullable=False)
+    achivment_name = Column(VARCHAR(140),nullable=False)
     number_of_points = Column(Integer)
 
 
