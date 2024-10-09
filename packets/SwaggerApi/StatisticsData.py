@@ -109,15 +109,29 @@ class StatisticUsersMinDifference(Resource):
 
 @statisticNamespace.route('/UserSevenDaysStreak')
 class StatisticUsersSevenDaysStreak(Resource):
+    statisticUsersSevenDaysStreakModel = statisticNamespace.model("Пользователи, которые получали достижения 7 дней подряд (по дате выдачи, хотя бы одно в каждый из 7 дней)",{
+    "user_id":fields.Integer
+})
     def get(self):
         '''Пользователи, которые получали достижения 7 дней подряд (по дате выдачи, хотя бы одно в каждый из 7 дней)'''
         try:
-            print(request.args)
-            for i in request.args:
-                print(request.args.get(i))
-        except:
-            pass
+            
+            value = engine.session.execute(text("""
+    SELECT ua1.user_id FROM (select DISTINCT user_id from achivment_recived where DATE(date_of_recived) = CURRENT_DATE - 1) ua1
+    INNER JOIN (select DISTINCT user_id from achivment_recived where DATE(date_of_recived) = CURRENT_DATE - 2) ua2 on ua1.user_id = ua2.user_id
+    INNER JOIN (select DISTINCT user_id from achivment_recived where DATE(date_of_recived) = CURRENT_DATE - 3) ua3 on ua1.user_id = ua3.user_id
+    INNER JOIN (select DISTINCT user_id from achivment_recived where DATE(date_of_recived) = CURRENT_DATE - 4) ua4 on ua1.user_id = ua4.user_id
+    INNER JOIN (select DISTINCT user_id from achivment_recived where DATE(date_of_recived) = CURRENT_DATE - 5) ua5 on ua1.user_id = ua5.user_id
+    INNER JOIN (select DISTINCT user_id from achivment_recived where DATE(date_of_recived) = CURRENT_DATE - 6) ua6 on ua1.user_id = ua6.user_id
+    INNER JOIN (select DISTINCT user_id from achivment_recived where DATE(date_of_recived) = CURRENT_DATE - 7) ua7 on ua1.user_id = ua7.user_id"""))
+            value = value.fetchall()
+            print(value)
+            data = []
+            for val in value:
+                data.append({"user_id":val[0]})
 
-        return {"name":{request.args.get('username')}}
+            return data
+        except:
+            return {"error"}
 
     
